@@ -36,7 +36,7 @@ Recipe lines may be prefixed with any combination of `@` (silent), `-` (ignore e
 Requires [Go 1.26+](https://go.dev/). No third-party deps.
 
 ```bash
-go install github.com/euxaristia/mkultra@latest
+go install github.com/euxaristia/mkultra/cmd/mkultra@latest
 ```
 
 ## Features
