@@ -2,8 +2,42 @@ package main
 
 import "strings"
 
+func stripComment(line string) string {
+	for i := 0; i < len(line); i++ {
+		if line[i] == '\\' && i+1 < len(line) && line[i+1] == '#' {
+			i++
+			continue
+		}
+		if line[i] == '$' && i+1 < len(line) {
+			var closer byte
+			if line[i+1] == '(' {
+				closer = ')'
+			} else if line[i+1] == '{' {
+				closer = '}'
+			}
+			if closer != 0 {
+				depth := 1
+				i += 2
+				for i < len(line) && depth > 0 {
+					if line[i] == '(' || line[i] == '{' {
+						depth++
+					} else if line[i] == closer {
+						depth--
+					}
+					i++
+				}
+				continue
+			}
+		}
+		if line[i] == '#' {
+			return strings.TrimRight(line[:i], " \t")
+		}
+	}
+	return line
+}
+
 func Parse(content string, dag *Dag) string {
-	curTgt := ""
+	var curTgts []string
 	var phonyTargets []string
 	var pendingRecipe string
 
@@ -16,13 +50,16 @@ func Parse(content string, dag *Dag) string {
 
 		if len(rawLine) > 0 && rawLine[0] == '\t' {
 			trimmed := trim(rawLine)
-			if len(trimmed) > 0 && len(curTgt) > 0 {
+			if len(trimmed) > 0 && len(curTgts) > 0 {
 				endsBS := trimmed[len(trimmed)-1] == '\\'
 				if endsBS {
 					cmd := trimmed[:len(trimmed)-1]
 					pendingRecipe += cmd + "\n"
 				} else {
-					dag.AddRecipe(curTgt, pendingRecipe+trimmed)
+					recipe := pendingRecipe + trimmed
+					for _, tgt := range curTgts {
+						dag.AddRecipe(tgt, recipe)
+					}
 					pendingRecipe = ""
 				}
 			}
@@ -32,13 +69,16 @@ func Parse(content string, dag *Dag) string {
 
 		if pendingRecipe != "" {
 			t := trim(pendingRecipe)
-			if len(curTgt) > 0 && len(t) > 0 {
-				dag.AddRecipe(curTgt, t)
+			if len(curTgts) > 0 && len(t) > 0 {
+				for _, tgt := range curTgts {
+					dag.AddRecipe(tgt, t)
+				}
 			}
 			pendingRecipe = ""
 		}
 
 		trimmed := trim(rawLine)
+		trimmed = stripComment(trimmed)
 		if len(trimmed) == 0 {
 			li++
 			continue
@@ -57,7 +97,7 @@ func Parse(content string, dag *Dag) string {
 			if len(lhs) > 0 && !strings.Contains(lhs, " ") {
 				expanded := (&Expander{Vars: dag.Variables}).Simple(rhs)
 				dag.SetVariable(lhs, expanded)
-				curTgt = ""
+				curTgts = nil
 				li++
 				continue
 			}
@@ -103,7 +143,7 @@ func Parse(content string, dag *Dag) string {
 			default:
 				dag.SetVariable(lhsForStore, rhs)
 			}
-			curTgt = ""
+			curTgts = nil
 			li++
 			continue
 		}
@@ -112,33 +152,39 @@ func Parse(content string, dag *Dag) string {
 		if colonPos := strings.IndexByte(trimmed, ':'); colonPos >= 0 {
 			afterColon := trimmed[colonPos+1:]
 			if len(afterColon) > 0 && afterColon[0] == '=' {
-				curTgt = ""
+				curTgts = nil
 				li++
 				continue
 			}
 			targetPartRaw := trimmed[:colonPos]
 			targetPart := trim(targetPartRaw)
 			expander := &Expander{Vars: dag.Variables}
-			expandedTarget := expander.Simple(targetPart)
+			expandedTargets := splitWS(expander.Simple(targetPart))
+			if len(expandedTargets) == 0 {
+				li++
+				continue
+			}
 			trimmedPrereqs := trim(afterColon)
 			expandedPrereqs := expander.Simple(trimmedPrereqs)
-			curTgt = expandedTarget
+			curTgts = expandedTargets
 
-			isPhony := expandedTarget == ".PHONY"
-			dag.EnsureNode(expandedTarget, isPhony)
+			for _, tgt := range expandedTargets {
+				isPhony := tgt == ".PHONY"
+				dag.EnsureNode(tgt, isPhony)
 
-			if expandedTarget == ".PHONY" {
-				for _, name := range splitWS(expandedPrereqs) {
-					phonyTargets = append(phonyTargets, name)
-					dag.EnsureNode(name, true)
+				if tgt == ".PHONY" {
+					for _, name := range splitWS(expandedPrereqs) {
+						phonyTargets = append(phonyTargets, name)
+						dag.EnsureNode(name, true)
+					}
+				} else if tgt != ".SUFFIXES" && (len(tgt) == 0 || tgt[0] != '.') && dag.DefaultTarget == "" {
+					dag.SetDefault(tgt)
 				}
-			} else if expandedTarget != ".SUFFIXES" && (len(expandedTarget) == 0 || expandedTarget[0] != '.') && dag.DefaultTarget == "" {
-				dag.SetDefault(expandedTarget)
-			}
 
-			if len(expandedPrereqs) > 0 && expandedTarget != ".PHONY" {
-				for _, prereq := range splitWS(expandedPrereqs) {
-					dag.AddPrereq(expandedTarget, prereq)
+				if len(expandedPrereqs) > 0 && tgt != ".PHONY" {
+					for _, prereq := range splitWS(expandedPrereqs) {
+						dag.AddPrereq(tgt, prereq)
+					}
 				}
 			}
 		}
@@ -147,8 +193,10 @@ func Parse(content string, dag *Dag) string {
 
 	if pendingRecipe != "" {
 		t := trim(pendingRecipe)
-		if len(curTgt) > 0 && len(t) > 0 {
-			dag.AddRecipe(curTgt, t)
+		if len(curTgts) > 0 && len(t) > 0 {
+			for _, tgt := range curTgts {
+				dag.AddRecipe(tgt, t)
+			}
 		}
 	}
 

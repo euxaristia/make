@@ -47,15 +47,19 @@ func shellCapture(cmd string) string {
 	return strings.Join(strings.Fields(string(out)), " ")
 }
 
-func wildcardExpand(pattern string) string {
-	if !strings.Contains(pattern, "*") && !strings.Contains(pattern, "?") {
-		return pattern
+func wildcardExpand(text string) string {
+	var result []string
+	for _, pattern := range strings.Fields(text) {
+		if !strings.ContainsAny(pattern, "*?") {
+			result = append(result, pattern)
+			continue
+		}
+		matches, err := filepath.Glob(pattern)
+		if err == nil {
+			result = append(result, matches...)
+		}
 	}
-	matches, err := filepath.Glob(pattern)
-	if err != nil {
-		return ""
-	}
-	return strings.Join(matches, " ")
+	return strings.Join(result, " ")
 }
 
 type AutoVars struct {
@@ -137,11 +141,11 @@ func (e *Expander) expand(text string, auto *AutoVars, expanding map[string]bool
 				i += 2
 				continue
 			case '?':
-				targetMtime := mtime(auto.Target)
+				targetFI, _ := os.Stat(auto.Target)
 				var newer []string
 				for _, p := range auto.Prereqs {
-					pm := mtime(p)
-					if targetMtime == 0 || pm > targetMtime {
+					pFI, err := os.Stat(p)
+					if err != nil || targetFI == nil || pFI.ModTime().After(targetFI.ModTime()) {
 						newer = append(newer, p)
 					}
 				}
@@ -282,10 +286,4 @@ func (e *Expander) callFunc(name, args string, auto *AutoVars, expanding map[str
 	}
 }
 
-func mtime(path string) int64 {
-	fi, err := os.Stat(path)
-	if err != nil {
-		return 0
-	}
-	return fi.ModTime().Unix()
-}
+

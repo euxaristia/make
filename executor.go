@@ -30,13 +30,14 @@ func needsRebuild(node *DagNode) bool {
 	if node.IsPhony {
 		return true
 	}
-	targetMtime := mtime(node.Target)
-	if targetMtime == 0 {
+	targetFI, err := os.Stat(node.Target)
+	if err != nil {
 		return true
 	}
+	targetMod := targetFI.ModTime()
 	for _, prereq := range node.Prereqs {
-		pm := mtime(prereq)
-		if pm == 0 || pm > targetMtime {
+		pFI, err := os.Stat(prereq)
+		if err != nil || pFI.ModTime().After(targetMod) {
 			return true
 		}
 	}
@@ -143,7 +144,23 @@ func (e *Executor) enqueue(st *executorState, target string) {
 		}
 	}
 
-	if len(job.Recipes) == 0 || !e.jobNeedsRebuild(st, job) {
+	if len(job.Recipes) == 0 {
+		if !job.IsPhony {
+			if _, err := os.Stat(job.Target); err != nil {
+				st.failed[target] = true
+				st.errors++
+				fmt.Fprintf(os.Stderr, "mkultra: *** No rule to make target '%s'\n", target)
+				if !e.KeepGoing {
+					st.stop = true
+				}
+				e.completeLocked(st, target)
+				return
+			}
+		}
+		e.completeLocked(st, target)
+		return
+	}
+	if !needsRebuild(&DagNode{Target: job.Target, Prereqs: job.Prereqs, IsPhony: job.IsPhony}) {
 		e.completeLocked(st, target)
 	} else {
 		st.ready = append(st.ready, target)
@@ -183,7 +200,23 @@ func (e *Executor) enqueueLocked(st *executorState, target string) {
 		}
 	}
 
-	if len(job.Recipes) == 0 || !e.jobNeedsRebuild(st, job) {
+	if len(job.Recipes) == 0 {
+		if !job.IsPhony {
+			if _, err := os.Stat(job.Target); err != nil {
+				st.failed[target] = true
+				st.errors++
+				fmt.Fprintf(os.Stderr, "mkultra: *** No rule to make target '%s'\n", target)
+				if !e.KeepGoing {
+					st.stop = true
+				}
+				e.completeLocked(st, target)
+				return
+			}
+		}
+		e.completeLocked(st, target)
+		return
+	}
+	if !needsRebuild(&DagNode{Target: job.Target, Prereqs: job.Prereqs, IsPhony: job.IsPhony}) {
 		e.completeLocked(st, target)
 	} else {
 		st.ready = append(st.ready, target)
@@ -225,23 +258,6 @@ func (e *Executor) dispatchLocked(st *executorState) {
 			st.Unlock()
 		}(job)
 	}
-}
-
-func (e *Executor) jobNeedsRebuild(st *executorState, j Job) bool {
-	if j.IsPhony {
-		return true
-	}
-	targetMtime := mtime(j.Target)
-	if targetMtime == 0 {
-		return true
-	}
-	for _, prereq := range j.Prereqs {
-		pm := mtime(prereq)
-		if pm == 0 || pm > targetMtime {
-			return true
-		}
-	}
-	return false
 }
 
 func (e *Executor) build(job Job) bool {
