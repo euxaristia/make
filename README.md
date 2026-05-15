@@ -1,6 +1,6 @@
 # mkultra
 
-A minimal, Unix-philosophy-compliant build tool in Pony.
+A minimal, Unix-philosophy-compliant build tool, now in Go.
 
 ## Usage
 
@@ -33,7 +33,7 @@ Recipe lines may be prefixed with any combination of `@` (silent), `-` (ignore e
 
 ## Building
 
-Requires [`ponyc`](https://www.ponylang.io/). No package manager, no third-party deps — Pony stdlib only.
+Requires [Go 1.26+](https://go.dev/). No third-party deps.
 
 ```bash
 make            # build ./mkultra
@@ -52,7 +52,7 @@ make uninstall  # remove it
 - **Automatic variables**: `$@`, `$<`, `$^` (dedup), `$+` (keeps dups), `$?` (newer prereqs)
 - **Variable functions**: `$(wildcard pattern)`, `$(shell command)`
 - **Process execution**: Runs recipes via `/bin/sh`
-- **Parallel jobs**: `-j N` dispatches independent recipes concurrently (effective concurrency is bounded by `--ponythreads`, which defaults to the CPU count)
+- **Parallel jobs**: `-j N` dispatches independent recipes concurrently
 - **Error handling**: Exits on first failure, `-k` to continue
 
 ## Testing
