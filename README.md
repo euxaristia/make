@@ -31,14 +31,12 @@ Positional `NAME=value` arguments are macro overrides — they take precedence o
 
 Recipe lines may be prefixed with any combination of `@` (silent), `-` (ignore error), `+` (always run, even under `-n`/`-q`).
 
-## Building
+## Install
 
 Requires [Go 1.26+](https://go.dev/). No third-party deps.
 
 ```bash
-make            # build ./mkultra
-make install    # install to ~/.local/bin/mkultra
-make uninstall  # remove it
+go install github.com/euxaristia/mkultra@latest
 ```
 
 ## Features
@@ -58,12 +56,11 @@ make uninstall  # remove it
 ## Testing
 
 ```bash
-make test
-
 # Integration tests
-cd tests/test1
-../../mkultra
-../../mkultra  # should show "up to date"
+(cd tests/test1 && rm -f hello hello.o && go run ../.. && go run ../..)
+(cd tests/test2 && rm -f program main.o utils.o main.c utils.c 2>/dev/null && go run ../..)
+(cd tests/test3 && rm -f input.txt output.txt && go run ../..)
+(cd tests/test4 && go run ../.. 2>/dev/null && echo "FAIL" || echo "PASS")
 ```
 
 ## License

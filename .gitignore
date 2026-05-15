@@ -1,8 +1,7 @@
-/target
-/mkultra
-/mkultra-go
-/mkultra-test
-/mkultra.o
+mkultra
+mkultra-go
+mkultra-test
+mkultra.o
 tests/test1/hello
 tests/test1/hello.o
 tests/test2/main.c
