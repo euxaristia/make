@@ -1,18 +1,24 @@
 .PHONY: all clean test install uninstall
 
 BINDIR = $(HOME)/.local/bin
-SOURCES = $(wildcard src/*.pony)
 
 all: mkultra
 
-mkultra: $(SOURCES)
-	ponyc src -b mkultra -o .
+mkultra: go.mod main.go dag.go parser.go expand.go executor.go
+	go build -o mkultra .
 
 clean:
-	rm -f mkultra mkultra.o mkultra-test
+	rm -f mkultra
 
-test:
-	ponyc src --debug -b mkultra-test -o . && ./mkultra-test
+test: mkultra
+	@echo "=== test1: C compilation ==="
+	cd tests/test1 && rm -f hello hello.o && ../../mkultra && ../../mkultra
+	@echo "=== test2: multi-level deps ==="
+	cd tests/test2 && rm -f program main.o utils.o main.c utils.c 2>/dev/null && ../../mkultra
+	@echo "=== test3: simple build ==="
+	cd tests/test3 && rm -f input.txt output.txt && ../../mkultra
+	@echo "=== test4: circular dep detection ==="
+	cd tests/test4 && ../../mkultra 2>/dev/null && echo "FAIL" || echo "PASS"
 
 install: $(BINDIR)/mkultra
 

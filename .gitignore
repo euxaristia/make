@@ -1,1 +1,14 @@
 /target
+/mkultra
+/mkultra-go
+/mkultra-test
+/mkultra.o
+tests/test1/hello
+tests/test1/hello.o
+tests/test2/main.c
+tests/test2/main.o
+tests/test2/program
+tests/test2/utils.c
+tests/test2/utils.o
+tests/test3/input.txt
+tests/test3/output.txt
