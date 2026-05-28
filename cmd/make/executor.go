@@ -96,7 +96,7 @@ func (e *Executor) Run(jobs []Job) int {
 		}
 	}
 	if !needsBuild {
-		fmt.Printf("mkultra: nothing to be done for '%s'\n", e.Target)
+		fmt.Printf("make: nothing to be done for '%s'\n", e.Target)
 		return 0
 	}
 
@@ -137,7 +137,7 @@ func (e *Executor) enqueue(st *executorState, target string) {
 		if st.failed[p] {
 			st.failed[target] = true
 			if len(job.Recipes) > 0 {
-				fmt.Fprintf(os.Stderr, "mkultra: Target '%s' not remade because of errors\n", target)
+				fmt.Fprintf(os.Stderr, "make: Target '%s' not remade because of errors\n", target)
 			}
 			e.completeLocked(st, target)
 			return
@@ -149,7 +149,7 @@ func (e *Executor) enqueue(st *executorState, target string) {
 			if _, err := os.Stat(job.Target); err != nil {
 				st.failed[target] = true
 				st.errors++
-				fmt.Fprintf(os.Stderr, "mkultra: *** No rule to make target '%s'\n", target)
+				fmt.Fprintf(os.Stderr, "make: *** No rule to make target '%s'\n", target)
 				if !e.KeepGoing {
 					st.stop = true
 				}
@@ -193,7 +193,7 @@ func (e *Executor) enqueueLocked(st *executorState, target string) {
 		if st.failed[p] {
 			st.failed[target] = true
 			if len(job.Recipes) > 0 {
-				fmt.Fprintf(os.Stderr, "mkultra: Target '%s' not remade because of errors\n", target)
+				fmt.Fprintf(os.Stderr, "make: Target '%s' not remade because of errors\n", target)
 			}
 			e.completeLocked(st, target)
 			return
@@ -205,7 +205,7 @@ func (e *Executor) enqueueLocked(st *executorState, target string) {
 			if _, err := os.Stat(job.Target); err != nil {
 				st.failed[target] = true
 				st.errors++
-				fmt.Fprintf(os.Stderr, "mkultra: *** No rule to make target '%s'\n", target)
+				fmt.Fprintf(os.Stderr, "make: *** No rule to make target '%s'\n", target)
 				if !e.KeepGoing {
 					st.stop = true
 				}
@@ -294,10 +294,10 @@ func (e *Executor) build(job Job) bool {
 		code := execShell(expanded)
 		if code != 0 {
 			if ignorePref || e.IgnoreErrors {
-				fmt.Fprintf(os.Stderr, "mkultra: [%s] Error %d (ignored)\n", job.Target, code)
+				fmt.Fprintf(os.Stderr, "make: [%s] Error %d (ignored)\n", job.Target, code)
 				continue
 			}
-			fmt.Fprintf(os.Stderr, "mkultra: *** [%s] Error %d\n", job.Target, code)
+			fmt.Fprintf(os.Stderr, "make: *** [%s] Error %d\n", job.Target, code)
 			return false
 		}
 	}

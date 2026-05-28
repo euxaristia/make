@@ -1,3 +1,3 @@
-module mkultra
+module make
 
 go 1.26

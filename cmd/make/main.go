@@ -113,7 +113,7 @@ func isValidName(s string) bool {
 }
 
 func printUsage() {
-	fmt.Println("Usage: mkultra [target] [NAME=value ...] [-f FILE] [-j N] [-eikSnpqrst]")
+	fmt.Println("Usage: make [target] [NAME=value ...] [-f FILE] [-j N] [-eikSnpqrst]")
 	fmt.Println("")
 	fmt.Println("Options:")
 	fmt.Println("  -f FILE   Read FILE as the makefile (default: Makefile, then makefile)")
@@ -135,7 +135,7 @@ func printUsage() {
 func main() {
 	args, errMsg := parseArgs(os.Args[1:])
 	if errMsg != "" {
-		fmt.Fprintf(os.Stderr, "mkultra: %s\n", errMsg)
+		fmt.Fprintf(os.Stderr, "make: %s\n", errMsg)
 		os.Exit(2)
 	}
 
@@ -145,7 +145,7 @@ func main() {
 	}
 
 	if args.Version {
-		fmt.Println("mkultra 0.2.0")
+		fmt.Println("make 0.2.0")
 		return
 	}
 
@@ -157,14 +157,14 @@ func main() {
 		} else if _, err := os.Stat("makefile"); err == nil {
 			makefile = "makefile"
 		} else {
-			fmt.Fprintf(os.Stderr, "mkultra: *** No makefile found.\n")
+			fmt.Fprintf(os.Stderr, "make: *** No makefile found.\n")
 			os.Exit(2)
 		}
 	}
 
 	content, err := os.ReadFile(makefile)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "mkultra: *** Cannot open %s\n", makefile)
+		fmt.Fprintf(os.Stderr, "make: *** Cannot open %s\n", makefile)
 		os.Exit(2)
 	}
 
@@ -186,7 +186,7 @@ func main() {
 
 	// Parse
 	if errMsg := Parse(string(content), dag); errMsg != "" {
-		fmt.Fprintf(os.Stderr, "mkultra: %s\n", errMsg)
+		fmt.Fprintf(os.Stderr, "make: %s\n", errMsg)
 		os.Exit(2)
 	}
 
@@ -203,7 +203,7 @@ func main() {
 
 	// Cycle detection
 	if cycle := dag.DetectCycle(); cycle != nil {
-		fmt.Fprintf(os.Stderr, "mkultra: *** Circular dependency: %s\n", strings.Join(cycle, " -> "))
+		fmt.Fprintf(os.Stderr, "make: *** Circular dependency: %s\n", strings.Join(cycle, " -> "))
 		os.Exit(2)
 	}
 
@@ -211,12 +211,12 @@ func main() {
 	buildTarget := args.Target
 	if buildTarget != "" {
 		if _, ok := dag.Nodes[buildTarget]; !ok {
-			fmt.Fprintf(os.Stderr, "mkultra: *** No rule to make %s\n", buildTarget)
+			fmt.Fprintf(os.Stderr, "make: *** No rule to make %s\n", buildTarget)
 			os.Exit(2)
 		}
 	} else {
 		if dag.DefaultTarget == "" {
-			fmt.Fprintf(os.Stderr, "mkultra: *** No default target.\n")
+			fmt.Fprintf(os.Stderr, "make: *** No default target.\n")
 			os.Exit(2)
 		}
 		buildTarget = dag.DefaultTarget

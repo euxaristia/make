@@ -1,8 +1,8 @@
 .openclaude/
-mkultra
-mkultra-go
-mkultra-test
-mkultra.o
+/make
+/make-go
+/make-test
+/make.o
 tests/test1/hello
 tests/test1/hello.o
 tests/test2/main.c
