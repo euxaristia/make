@@ -56,12 +56,12 @@ go install github.com/euxaristia/make/cmd/make@latest
 ## Testing
 
 ```bash
-# Integration tests
-(cd tests/test1 && rm -f hello hello.o && go run ../../cmd/make && go run ../../cmd/make)
-(cd tests/test2 && rm -f program main.o utils.o main.c utils.c 2>/dev/null && go run ../../cmd/make)
-(cd tests/test3 && rm -f input.txt output.txt && go run ../../cmd/make)
-(cd tests/test4 && go run ../../cmd/make 2>/dev/null && echo "FAIL" || echo "PASS")
+go test ./...
 ```
+
+The test suite includes unit coverage for parsing, expansion, argument handling,
+and DAG behavior, plus integration coverage driven by the fixture Makefiles under
+`tests/`.
 
 ## License
 
