@@ -6,7 +6,7 @@ output.txt: input.txt
 	echo "Built output.txt"
 
 input.txt:
-	echo "Hello from mkultra" > input.txt
+	echo "Hello from make" > input.txt
 
 clean:
 	rm -f output.txt input.txt

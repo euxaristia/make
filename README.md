@@ -1,11 +1,11 @@
-# mkultra
+# make
 
 A minimal, Unix-philosophy-compliant build tool, now in Go.
 
 ## Usage
 
 ```
-mkultra [target] [NAME=value ...] [-f FILE] [-j N] [-eikSnpqrst]
+make [target] [NAME=value ...] [-f FILE] [-j N] [-eikSnpqrst]
 ```
 
 ### Options
@@ -36,7 +36,7 @@ Recipe lines may be prefixed with any combination of `@` (silent), `-` (ignore e
 Requires [Go 1.26+](https://go.dev/). No third-party deps.
 
 ```bash
-go install github.com/euxaristia/mkultra/cmd/mkultra@latest
+go install github.com/euxaristia/make/cmd/make@latest
 ```
 
 ## Features
@@ -57,10 +57,10 @@ go install github.com/euxaristia/mkultra/cmd/mkultra@latest
 
 ```bash
 # Integration tests
-(cd tests/test1 && rm -f hello hello.o && go run ../../cmd/mkultra && go run ../../cmd/mkultra)
-(cd tests/test2 && rm -f program main.o utils.o main.c utils.c 2>/dev/null && go run ../../cmd/mkultra)
-(cd tests/test3 && rm -f input.txt output.txt && go run ../../cmd/mkultra)
-(cd tests/test4 && go run ../../cmd/mkultra 2>/dev/null && echo "FAIL" || echo "PASS")
+(cd tests/test1 && rm -f hello hello.o && go run ../../cmd/make && go run ../../cmd/make)
+(cd tests/test2 && rm -f program main.o utils.o main.c utils.c 2>/dev/null && go run ../../cmd/make)
+(cd tests/test3 && rm -f input.txt output.txt && go run ../../cmd/make)
+(cd tests/test4 && go run ../../cmd/make 2>/dev/null && echo "FAIL" || echo "PASS")
 ```
 
 ## License

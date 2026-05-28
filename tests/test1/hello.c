@@ -1,6 +1,6 @@
 #include <stdio.h>
 
 int main() {
-    printf("Hello from mkultra!\n");
+    printf("Hello from make!\n");
     return 0;
 }
