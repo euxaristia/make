@@ -32,8 +32,11 @@ jobs:
         run: go vet ./...
 
   tests:
-    name: Tests & Build
-    runs-on: ubuntu-latest
+    name: Tests & Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
