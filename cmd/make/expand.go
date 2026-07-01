@@ -285,5 +285,3 @@ func (e *Expander) callFunc(name, args string, auto *AutoVars, expanding map[str
 		return result
 	}
 }
-
-

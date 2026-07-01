@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-format:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Verify Go formatting
+        run: |
+          if [ -n "$(go fmt ./...)" ]; then
+            echo "Go code is not formatted. Please run 'go fmt ./...'"
+            exit 1
+          fi
+
+      - name: Go Vet
+        run: go vet ./...
+
+  tests:
+    name: Tests & Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Run Tests
+        run: go test -v -race ./...
+
+  all-checks-pass:
+    name: All required checks pass
+    needs:
+      - lint-and-format
+      - tests
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate job results
+        env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+        run: |
+          echo "$RESULTS" | python3 -c "
+          import json, sys
+          results = json.load(sys.stdin)
+          failed = [r for r in results if r == 'failure']
+          if failed:
+              print(f'::error::{len(failed)} job(s) failed')
+              sys.exit(1)
+          print('All checks passed (or were skipped)')
+          "

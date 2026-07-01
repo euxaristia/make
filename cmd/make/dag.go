@@ -1,10 +1,10 @@
 package main
 
 type DagNode struct {
-	Target   string
-	Prereqs  []string
-	Recipes  []string
-	IsPhony  bool
+	Target  string
+	Prereqs []string
+	Recipes []string
+	IsPhony bool
 }
 
 type Dag struct {
